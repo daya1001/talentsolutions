@@ -12,6 +12,8 @@ import {
   type PortfolioItem,
   type InsertPortfolioItem
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -28,148 +30,60 @@ export interface IStorage {
   createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private contacts: Map<number, Contact>;
-  private testimonials: Map<number, Testimonial>;
-  private portfolioItems: Map<number, PortfolioItem>;
-  private currentId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.contacts = new Map();
-    this.testimonials = new Map();
-    this.portfolioItems = new Map();
-    this.currentId = 1;
-    
-    // Initialize with sample data
-    this.initializeSampleData();
-  }
-
-  private initializeSampleData() {
-    // Sample testimonials
-    const sampleTestimonials: InsertTestimonial[] = [
-      {
-        name: "Sarah Johnson",
-        position: "CEO",
-        company: "TechCorp",
-        content: "TalentSolutions transformed our hiring process completely. They found us exceptional candidates in record time and their software solution streamlined our entire workflow.",
-        rating: 5,
-        isActive: true
-      },
-      {
-        name: "Michael Chen",
-        position: "CTO",
-        company: "InnovateLabs",
-        content: "The custom software they developed exceeded our expectations. Their team understood our complex requirements and delivered a solution that increased our efficiency by 40%.",
-        rating: 5,
-        isActive: true
-      },
-      {
-        name: "Emma Rodriguez",
-        position: "HR Director",
-        company: "GlobalFinance",
-        content: "Professional, reliable, and results-driven. TalentSolutions helped us scale our team globally while maintaining the highest quality standards.",
-        rating: 5,
-        isActive: true
-      }
-    ];
-
-    sampleTestimonials.forEach(testimonial => {
-      this.createTestimonial(testimonial);
-    });
-
-    // Sample portfolio items
-    const samplePortfolioItems: InsertPortfolioItem[] = [
-      {
-        title: "Fortune 500 Talent Acquisition",
-        description: "Successfully placed 200+ executives across multiple departments, reducing hiring time by 60%.",
-        category: "Consultancy",
-        industry: "Technology Sector",
-        duration: "6 months",
-        imageUrl: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
-        isActive: true
-      },
-      {
-        title: "E-commerce Platform Redesign",
-        description: "Built scalable e-commerce solution resulting in 300% increase in online sales and improved user experience.",
-        category: "Development",
-        industry: "Retail Industry",
-        duration: "4 months",
-        imageUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
-        isActive: true
-      },
-      {
-        title: "Digital Transformation Initiative",
-        description: "Combined talent acquisition and custom software development to modernize legacy systems.",
-        category: "Hybrid",
-        industry: "Healthcare",
-        duration: "8 months",
-        imageUrl: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300",
-        isActive: true
-      }
-    ];
-
-    samplePortfolioItems.forEach(item => {
-      this.createPortfolioItem(item);
-    });
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async createContact(insertContact: InsertContact): Promise<Contact> {
-    const id = this.currentId++;
-    const contact: Contact = { 
-      ...insertContact, 
-      id,
-      createdAt: new Date()
-    };
-    this.contacts.set(id, contact);
+    const [contact] = await db
+      .insert(contacts)
+      .values(insertContact)
+      .returning();
     return contact;
   }
 
   async getContacts(): Promise<Contact[]> {
-    return Array.from(this.contacts.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
+    return await db.select().from(contacts).orderBy(contacts.createdAt);
   }
 
   async getActiveTestimonials(): Promise<Testimonial[]> {
-    return Array.from(this.testimonials.values()).filter(t => t.isActive);
+    return await db.select().from(testimonials).where(eq(testimonials.isActive, true));
   }
 
   async createTestimonial(insertTestimonial: InsertTestimonial): Promise<Testimonial> {
-    const id = this.currentId++;
-    const testimonial: Testimonial = { ...insertTestimonial, id };
-    this.testimonials.set(id, testimonial);
+    const [testimonial] = await db
+      .insert(testimonials)
+      .values(insertTestimonial)
+      .returning();
     return testimonial;
   }
 
   async getActivePortfolioItems(): Promise<PortfolioItem[]> {
-    return Array.from(this.portfolioItems.values()).filter(item => item.isActive);
+    return await db.select().from(portfolioItems).where(eq(portfolioItems.isActive, true));
   }
 
   async createPortfolioItem(insertPortfolioItem: InsertPortfolioItem): Promise<PortfolioItem> {
-    const id = this.currentId++;
-    const portfolioItem: PortfolioItem = { ...insertPortfolioItem, id };
-    this.portfolioItems.set(id, portfolioItem);
+    const [portfolioItem] = await db
+      .insert(portfolioItems)
+      .values(insertPortfolioItem)
+      .returning();
     return portfolioItem;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
