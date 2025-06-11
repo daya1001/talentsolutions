@@ -31,8 +31,7 @@ export default function Hero() {
               </Button>
               <Button 
                 onClick={() => scrollToSection("portfolio")}
-                variant="outline"
-                className="border-2 border-white text-white hover:bg-white hover:text-primary transition-colors px-8 py-4 text-lg font-semibold"
+                className="bg-white text-primary border-2 border-white hover:bg-transparent hover:text-white transition-colors px-8 py-4 text-lg font-semibold"
               >
                 View Portfolio
               </Button>
