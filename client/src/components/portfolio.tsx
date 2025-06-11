@@ -85,7 +85,7 @@ export default function Portfolio() {
         </div>
 
         <div className="text-center">
-          <Button className="bg-primary text-white hover:bg-blue-700 transition-colors px-8 py-4">
+          <Button className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-4 shadow-lg">
             View All Case Studies
           </Button>
         </div>
