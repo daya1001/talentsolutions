@@ -54,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(portfolioItems);
     } catch (error) {
       console.error("Error fetching portfolio items:", error);
-      res.status(500).json({ message: "Failed to fetch portfolio items" });
+      res.status(500).json({ message: "Failed to fetch portfolio items", error :error});
     }
   });
 
@@ -65,7 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(contacts);
     } catch (error) {
       console.error("Error fetching contacts:", error);
-      res.status(500).json({ message: "Failed to fetch contacts" });
+      res.status(500).json({ message: "Failed to fetch contacts",error:error });
     }
   });
 
