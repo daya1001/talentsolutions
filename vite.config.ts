@@ -31,6 +31,7 @@ export default defineConfig({
   },
   // Use __dirname here
   root: path.resolve(__dirname, "client"),
+  publicDir: path.resolve(__dirname, "client", "public"),
   build: {
     // Use __dirname here
     outDir: path.resolve(__dirname, "dist/public"),
